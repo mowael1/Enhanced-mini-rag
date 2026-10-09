@@ -43,6 +43,14 @@ async def upload_data(project_id: str, file: UploadFile, app_settings: Settings 
                 if not chunk:
                     break
                 await f.write(chunk)
+                
+        return JSONResponse(
+            status_code= status.HTTP_200_OK,
+            content={
+                "signal": ResponseSignal.FILE_UPLOAD_SUCCESS.value,
+                "file_id": file_id
+            }
+        )
     except Exception as e:
         
         logger.error(f"Error while uploading file: {e}")
