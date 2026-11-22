@@ -10,6 +10,29 @@ class ProjectModel(BaseDataModel):
         # Here we have project collection in mongodb
         self.collection = self.db_client[DataBaseEnum.COLLECTION_PROJECT_NAME.value]
         
+    
+    # For apply indexing
+    async def init_collection(self):
+        indexes = project_scheme.get_indexes()
+        for index in indexes:
+            await self.collection.create_index(
+                index["key"],
+                name=index["name"],
+                unique=index["unique"]
+            )
+            
+            
+    @classmethod
+    async def create_instance(cls, db_client: object):
+        """We will use this function to make object from the model and applay indexing"""
+        
+        # This will call the __init__()
+        instance = cls(db_client)
+        
+        # Here we applying indexing
+        await instance.init_collection()
+        
+        return instance
         
     async def create_project(self, project:project_scheme):
         
@@ -47,7 +70,7 @@ class ProjectModel(BaseDataModel):
     
         total_documents = await self.collection.count_documents({})
         
-        skip = (page - 1) * page_size  # ← عدد الـ documents اللي هتتخطاها
+        skip = (page - 1) * page_size
 
         cursor = self.collection.find({}).skip(skip).limit(page_size)
         
