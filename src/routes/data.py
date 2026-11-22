@@ -24,7 +24,7 @@ data_router = APIRouter(
 async def upload_data(request: Request, project_id: str, file: UploadFile, app_settings: Settings = Depends(get_settings)):
     
     """Create Project collection in Mongodb"""
-    project_model = ProjectModel(
+    project_model = await ProjectModel.create_instance(
         db_client=request.app.db_client
     )
     
@@ -80,7 +80,7 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
     
     
     """Create Project collection in Mongodb"""
-    project_model = ProjectModel(
+    project_model = await ProjectModel.create_instance(
         db_client=request.app.db_client
     )
     
@@ -88,7 +88,7 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
         project_id=project_id
     )
     
-    chunk_model = ChunkModel(
+    chunk_model = await ChunkModel.create_instance(
         db_client=request.app.db_client
     )
     
@@ -96,12 +96,6 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
     chunk_size = process_request.chunk_size
     overlap_size = process_request.overlap_size
     do_reset = process_request.do_reset
-    
-    if do_reset == 1:
-        await chunk_model.delete_chunks_by_project_id(
-            project_id= project.id
-        )
-    
     
     file_chunks = ProcessController(project_id=project_id).process_file_content(
                                     file_id=file_id,chunk_size=chunk_size, 
@@ -125,6 +119,11 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
             )
             for i, chunk in enumerate(file_chunks)
         ]
+    
+    if do_reset == 1:
+        await chunk_model.delete_chunks_by_project_id(
+            project_id= project.id
+        )
     
     
     no_records = await chunk_model.insert_many_chunks(file_chunks_records)
