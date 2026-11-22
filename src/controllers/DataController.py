@@ -8,7 +8,6 @@ import uuid
 class DataController(BaseController):
     
     def __init__(self):
-        # Here we call BaseController init function
         super().__init__()
         
     def validate_uploaded_file(self, file:UploadFile):
