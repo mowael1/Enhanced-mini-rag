@@ -1,15 +1,12 @@
 from helpers.config import get_settings
-import os
+from pathlib import Path
 class BaseController:
     
     def __init__(self):
         self.app_settings= get_settings()
         
         #C:\Users\mw865\OneDrive\Desktop\mini-rag-enhanced\src
-        self.base_dir = os.path.dirname(os.path.dirname(__file__))
+        self.base_dir = Path(__file__).parent.parent
 
         #C:\Users\mw865\OneDrive\Desktop\mini-rag-enhanced\src\assets\files
-        self.files_dir = os.path.join(
-            self.base_dir,
-            "assets/files"
-        )
+        self.files_dir = Path(__file__).parent.parent / "assets/files"
