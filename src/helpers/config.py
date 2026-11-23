@@ -18,16 +18,24 @@ class Settings(BaseSettings):
     # POSTGRES_PORT: int
     # POSTGRES_MAIN_DATABASE: str
     # # ====================== LLM Config ======================
-    # GENERATION_BACKEND: str
-    # EMBEDDING_BACKEND: str
+    GENERATION_BACKEND: str
+    EMBEDDING_BACKEND: str
 
-    # OPENAI_API_KEY: str
-    # OPENAI_API_URL: str
-    # COHERE_API_KEY: str
-
-    # GENERATION_MODEL_ID: str
-    # EMBEDDING_MODEL_ID: str
-    # EMBEDDING_MODEL_SIZE: int
+    OPENAI_API_KEY: str
+    OPENAI_API_URL: str
+    
+    NIVDIA_API_KEY: str
+    NIVDIA_API_URL: str
+    
+    
+    GENERATION_MODEL_ID: str
+    EMBEDDING_MODEL_ID: str
+    EMBEDDING_MODEL_SIZE: int
+    
+    
+    VECTOR_DB_BACKEND: str
+    VECTOR_DB_PATH : str
+    VECTOR_DB_DISTANCE_METHOD: str
     
     class Config:
         env_file = ".env"
