@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     VECTOR_DB_DISTANCE_METHOD: str
     limit_documents: int
     
+    PRIMARY_LANG: str
+    DEFAULT_LANG: str
+    
     class Config:
         env_file = ".env"
         
