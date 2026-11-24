@@ -7,12 +7,12 @@ class LLMProviderFactory:
         self.config = config
         
         
-    def create(self, provider: str):
+    def create(self, provider: str , api_key: str, api_url: str):
         
         if provider == LLMEnums.OPENAI.value:
             return OpenAIProvider(
-                api_key = self.config.OPENAI_API_KEY,
-                api_url = self.config.OPENAI_API_URL
+                api_key = api_key,
+                api_url = api_url
             )
         
         raise ValueError(f"Unknown LLM provider: {provider}")
