@@ -76,6 +76,35 @@ class VectorDBClientStub:
         return [{"text": "matching chunk", "score": 0.9}]
 
 
+class TemplateParserStub:
+    def get(self, group, key, variables=None):
+        values = variables or {}
+        templates = {
+            "system_prompt": "Use only the supplied documents.",
+            "document_prompt": "Document {doc_num}: {chunk_text}",
+            "footer_prompt": "Question: {user_query}",
+        }
+        return templates[key].format(**values)
+
+
+class GenerationClientStub:
+    class Enums:
+        SYSTEM = SimpleNamespace(value="system")
+        USER = SimpleNamespace(value="user")
+
+    enums = Enums()
+
+    def __init__(self):
+        self.generate_calls = []
+
+    def construct_prompt(self, prompt, role):
+        return {"role": role, "content": prompt}
+
+    def generate_text(self, prompt, chat_history):
+        self.generate_calls.append((prompt, chat_history))
+        return "A grounded answer"
+
+
 class NLPQueryEmbeddingTest(TestCase):
     def test_query_is_embedded_as_one_item_and_vector_is_flattened(self):
         embedding_client = EmbeddingClientStub()
@@ -95,4 +124,34 @@ class NLPQueryEmbeddingTest(TestCase):
         self.assertEqual(embedding_client.calls, [(["What is RAG?"], "query")])
         self.assertEqual(vectordb_client.calls, [("collection_10", [0.1, 0.2, 0.3], 3)])
         self.assertEqual(results, [{"text": "matching chunk", "score": 0.9}])
+
+    def test_answer_uses_sync_search_and_sends_the_question_once(self):
+        generation_client = GenerationClientStub()
+        controller = NLPController(
+            vectordb_client=None,
+            generation_client=generation_client,
+            embedding_client=None,
+            template_parser=TemplateParserStub(),
+        )
+        controller.search_vector_db_collection = mock.Mock(return_value=[
+            SimpleNamespace(text="RAG retrieves relevant context.")
+        ])
+
+        answer, full_prompt, chat_history = controller.answer_rag_question(
+            project=SimpleNamespace(project_id="10"),
+            query="What is RAG?",
+            limit=4,
+        )
+
+        self.assertEqual(answer, "A grounded answer")
+        self.assertEqual(full_prompt.count("What is RAG?"), 1)
+        self.assertEqual(len(chat_history), 2)
+        self.assertEqual(generation_client.generate_calls, [
+            (full_prompt, [chat_history[0]])
+        ])
+        controller.search_vector_db_collection.assert_called_once_with(
+            project=mock.ANY,
+            text="What is RAG?",
+            limit=4,
+        )
 
