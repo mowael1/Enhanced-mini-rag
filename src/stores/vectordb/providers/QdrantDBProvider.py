@@ -6,8 +6,8 @@ from qdrant_client import models, QdrantClient
 
 from ..VectorDBInterface import VectorDBInterface
 from ..VectorDBEnums import DistanceMethodEnums
-# from models.db_schemes import RetrieveDocument
 from helpers.config import get_settings
+from models.db_schemes.chunk_schema import RetrieveDocument
 
 
 class QdrantDBProvider(VectorDBInterface):
@@ -243,7 +243,7 @@ class QdrantDBProvider(VectorDBInterface):
 
         return [
             RetrieveDocument(
-                text=result.payload["text"],
+                text=result.payload.get("text", ""),
                 score=result.score
             )
             for result in results.points
