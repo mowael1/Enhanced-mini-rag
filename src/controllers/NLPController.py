@@ -90,3 +90,50 @@ class NLPController(BaseController):
             return []
 
         return results
+
+    def answer_rag_question(self, project: project_scheme, query: str, limit: int = 10):
+        retrieved_documents = self.search_vector_db_collection(
+            project=project,
+            text=query,
+            limit=limit
+        )
+
+        if not retrieved_documents:
+            return None, None, None
+
+        if self.template_parser is None:
+            raise RuntimeError("Template parser was not configured")
+
+        system_prompt = self.template_parser.get("rag", "system_prompt")
+
+        documents_prompt = "\n".join([
+            self.template_parser.get("rag", "document_prompt", {
+                "doc_num": idx + 1,
+                "chunk_text": doc.text
+            })
+            for idx, doc in enumerate(retrieved_documents)
+        ])
+
+        footer_prompt = self.template_parser.get("rag", "footer_prompt", {
+            "user_query": query
+        })
+        full_prompt = "\n\n".join([documents_prompt, footer_prompt])
+
+        # generate_text appends its prompt to chat_history. Passing only the
+        # system message prevents the user question from being sent repeatedly.
+        system_message = self.generation_client.construct_prompt(
+            prompt=system_prompt,
+            role=self.generation_client.enums.SYSTEM.value
+        )
+        user_message = self.generation_client.construct_prompt(
+            prompt=full_prompt,
+            role=self.generation_client.enums.USER.value
+        )
+        chat_history = [system_message, user_message]
+
+        answer = self.generation_client.generate_text(
+            prompt=full_prompt,
+            chat_history=[system_message]
+        )
+
+        return answer, full_prompt, chat_history
