@@ -7,6 +7,7 @@ from stores.llm import LLMProviderFactory
 from stores.vectordb import VectorDBProviderFactory
 
 from routes import base, data, nlp
+from stores.llm import TemplateParser
 settings = get_settings()
 
 
@@ -32,6 +33,8 @@ async def lifespan(app: FastAPI):
     # VectorDB client
     app.vectordb_client = vectordb_provider_factory.create(provider=settings.VECTOR_DB_BACKEND)
     app.vectordb_client.connect()
+    
+    app.template_parser = TemplateParser(settings.PRIMARY_LANG,settings.DEFAULT_LANG)
 
     yield 
     app.vectordb_client.disconnect()
