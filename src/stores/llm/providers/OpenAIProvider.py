@@ -76,7 +76,7 @@ class OpenAIProvider(LLMInterface):
         self,
         texts: list[str],
         document_type: str = "passage"
-    ):
+    ) -> list[list[float]] | None:
 
         if not self.client:
             self.logger.error("OpenAI client was not set")
@@ -89,11 +89,11 @@ class OpenAIProvider(LLMInterface):
         if document_type not in ("passage", "query"):
             raise ValueError("document_type must be 'passage' or 'query'")
 
-        if not texts or any(
+        if not isinstance(texts, list) or not texts or any(
             not isinstance(text, str) or not text.strip()
             for text in texts
         ):
-            self.logger.error("Invalid or empty texts")
+            self.logger.error("texts must be a non-empty list of non-empty strings")
             return None
 
         response = self.client.embeddings.create(
